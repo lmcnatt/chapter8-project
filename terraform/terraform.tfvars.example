@@ -10,7 +10,7 @@ db_name     = "icecream"
 db_username = "admin"
 
 # Optional: Git URL for EC2 to clone and run the app (e.g. https://github.com/your-org/chapter8-project.git)
-app_repo_url   = ""
+app_repo_url   = "https://github.com/lmcnatt/chapter8-project.git"
 app_repo_branch = "main"
 
 # ASG

@@ -20,6 +20,137 @@ Node.js ice cream parlor API (flavors table on RDS), deployed on EC2 in an Auto 
 
 ---
 
+## Commands to run (in order) and where to store credentials
+
+### 1. Store credentials — Terraform (local file)
+
+Create the Terraform vars file and put your RDS password (and optional username) there. **Do not commit this file.**
+
+```bash
+cd terraform
+cp terraform.tfvars.example terraform.tfvars
+```
+
+Edit `terraform/terraform.tfvars`. Set at least:
+
+- **`db_password`** = a strong password you choose (e.g. `MyStr0ng!RDS_Pass`). This will be the RDS master password.
+- Optionally **`db_username`** (default is `admin`).
+
+Leave or adjust other values (e.g. `aws_region = "us-west-2"`).
+
+---
+
+### 2. Store credentials — GitHub Actions (browser)
+
+In your GitHub repo:
+
+1. Go to **Settings → Secrets and variables → Actions**.
+2. Click **New repository secret**.
+3. **Name:** `DB_PASSWORD`
+4. **Value:** the **exact same** password you set for `db_password` in `terraform.tfvars`.
+
+(Optional, for deploy.) Add AWS access — **either**:
+
+- **OIDC:** secret **`AWS_ROLE_ARN`**, value = your IAM role ARN; optional **`AWS_REGION`** = `us-west-2`.
+- **Access keys:** **`AWS_ACCESS_KEY_ID`**, **`AWS_SECRET_ACCESS_KEY`**; optional **`AWS_REGION`** = `us-west-2`.
+
+---
+
+### 3. Store credentials — local app (local file)
+
+For running the app locally or for MySQL Workbench, use a `.env` file in the **project root**. **Do not commit this file.**
+
+```bash
+# from project root
+cp .env.example .env
+```
+
+Edit **`.env`** in the project root. Set:
+
+- **`DB_HOST`** = `localhost` for a local MySQL; for RDS, use the value from `terraform output rds_endpoint` (after step 5).
+- **`DB_PORT`** = `3306`
+- **`DB_NAME`** = `icecream`
+- **`DB_USER`** = same as `db_username` in terraform.tfvars (e.g. `admin`)
+- **`DB_PASSWORD`** = same as `db_password` in terraform.tfvars
+
+---
+
+### 4. Commands — install app and deploy infrastructure
+
+From the **project root**:
+
+```bash
+npm install
+```
+
+From the **terraform** directory:
+
+```bash
+cd terraform
+terraform init
+terraform plan -var="db_password=YOUR_ACTUAL_PASSWORD"
+terraform apply -var="db_password=YOUR_ACTUAL_PASSWORD" -auto-approve
+```
+
+Replace `YOUR_ACTUAL_PASSWORD` with the same password you put in `terraform.tfvars` for `db_password`.
+
+---
+
+### 5. Get RDS endpoint (for MySQL Workbench and .env)
+
+```bash
+cd terraform
+terraform output rds_endpoint
+```
+
+Copy that value. Use it as:
+
+- **MySQL Workbench:** Connection **Hostname**.
+- **`.env`:** `DB_HOST=` that value (when you want the local app to talk to RDS).
+
+---
+
+### 6. Create schema and seed in RDS (MySQL Workbench)
+
+In MySQL Workbench, create a connection:
+
+- **Hostname:** `rds_endpoint` from step 5 (or use an SSH tunnel; see “Managing the database with MySQL Workbench” below).
+- **Port:** `3306`
+- **Username:** same as `db_username` in terraform.tfvars (e.g. `admin`)
+- **Password:** same as `db_password` in terraform.tfvars
+
+Connect, then run **`scripts/schema.sql`** and **`scripts/seed.sql`** (File → Open SQL Script, or paste and execute).
+
+---
+
+### 7. Run the app locally (optional)
+
+From **project root** (with `.env` set, and DB reachable):
+
+```bash
+npm start
+```
+
+---
+
+### 8. Trigger the pipeline (deploy)
+
+Push to `main` (e.g. commit and push). The workflow will run tests and, on push to `main`, run `terraform apply` (using the `DB_PASSWORD` secret) and refresh the ASG.
+
+---
+
+### Credential summary
+
+| What | Where | Exact name / keys |
+|------|--------|--------------------|
+| RDS password (and username) for Terraform | **File:** `terraform/terraform.tfvars` | `db_password`, optional `db_username` |
+| RDS password for GitHub deploy | **GitHub:** Settings → Secrets and variables → Actions | Secret name: **`DB_PASSWORD`** |
+| DB connection for local app / Workbench | **File:** `.env` in project root | `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD` |
+
+Use the **same** RDS password in all three: `terraform.tfvars` → `DB_PASSWORD` secret → `DB_PASSWORD` in `.env`.
+
+---
+
 ## Local setup
 
 1. **Install dependencies**
