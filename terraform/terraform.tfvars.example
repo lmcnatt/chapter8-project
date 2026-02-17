@@ -1,0 +1,22 @@
+# Copy to terraform.tfvars and set values. Do not commit terraform.tfvars.
+
+aws_region   = "us-west-2"
+project_name = "icecream"
+
+# Required: RDS master password
+db_password = "CHANGE_ME_STRONG_PASSWORD"
+
+db_name     = "icecream"
+db_username = "admin"
+
+# Optional: Git URL for EC2 to clone and run the app (e.g. https://github.com/your-org/chapter8-project.git)
+app_repo_url   = ""
+app_repo_branch = "main"
+
+# ASG
+asg_min_size         = 1
+asg_max_size         = 3
+asg_desired_capacity = 1
+
+instance_type      = "t3.micro"
+rds_instance_class = "db.t3.micro"

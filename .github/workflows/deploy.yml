@@ -1,0 +1,97 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  NODE_VERSION: '24'
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: 'package.json'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm test
+        env:
+          # Skip DB test if no credentials (public runner)
+          DB_HOST: ''
+          DB_PORT: '3306'
+          DB_NAME: 'icecream'
+          DB_USER: 'admin'
+          DB_PASSWORD: ''
+
+  deploy:
+    name: Deploy to AWS
+    needs: test
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials (OIDC)
+        if: secrets.AWS_ROLE_ARN != ''
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ secrets.AWS_REGION || 'us-west-2' }}
+
+      - name: Configure AWS credentials (access keys)
+        if: secrets.AWS_ROLE_ARN == '' && secrets.AWS_ACCESS_KEY_ID != ''
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION || 'us-west-2' }}
+
+      - name: Terraform init
+        working-directory: terraform
+        run: |
+          terraform init -input=false
+
+      - name: Terraform plan
+        working-directory: terraform
+        run: |
+          terraform plan -input=false \
+            -var="db_password=${{ secrets.DB_PASSWORD }}" \
+            -var="app_repo_url=https://github.com/${{ github.repository }}.git" \
+            -var="app_repo_branch=${{ github.ref_name }}" \
+            -out=tfplan
+        continue-on-error: true
+
+      - name: Terraform apply
+        working-directory: terraform
+        run: |
+          terraform apply -input=false -auto-approve \
+            -var="db_password=${{ secrets.DB_PASSWORD }}" \
+            -var="app_repo_url=https://github.com/${{ github.repository }}.git" \
+            -var="app_repo_branch=${{ github.ref_name }}"
+        continue-on-error: true
+
+      - name: Trigger ASG instance refresh
+        run: |
+          ASG=$(cd terraform && terraform output -raw asg_name 2>/dev/null || true)
+          if [ -n "$ASG" ]; then
+            aws autoscaling start-instance-refresh --auto-scaling-group-name "$ASG" --preferences '{"MinHealthyPercentage": 0}' 2>/dev/null || true
+          fi
+
+      - name: Output ALB URL
+        run: |
+          cd terraform && terraform output -raw alb_url 2>/dev/null || echo "Run terraform apply locally to get ALB URL"
