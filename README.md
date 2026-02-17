@@ -8,6 +8,18 @@ Node.js ice cream parlor API (flavors table on RDS), deployed on EC2 in an Auto 
 - **Infra:** Terraform (VPC, RDS, ALB, ASG, security groups). Default region: **us-west-2** (Oregon). EC2: Amazon Linux 2023, t3.micro. RDS: MySQL 8.0, db.t3.micro, 20 GB storage.
 - **CI/CD:** GitHub Actions (test on PR/push, deploy on push to `main`)
 
+## Where to put credentials (and keep them secure)
+
+| Use case | Where | Never commit |
+|----------|--------|----------------|
+| **Terraform / RDS** (create RDS, EC2 user data) | `terraform/terraform.tfvars` — set `db_password`, optional `db_username` | Yes — `terraform.tfvars` is in `.gitignore` |
+| **Local app** (run `npm start` against RDS or local MySQL) | `.env` in project root — set `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD` | Yes — `.env` is in `.gitignore` |
+| **GitHub Actions** (deploy job runs `terraform apply`) | Repo **Settings → Secrets and variables → Actions** — add secret `DB_PASSWORD` (same value as `db_password` in tfvars) | N/A — secrets are not in the repo |
+
+**Staying secure:** Do not commit `.env` or `terraform/terraform.tfvars` (both are in `.gitignore`). Use a strong password for the DB. In GitHub, store the RDS password only as the **DB_PASSWORD** Actions secret.
+
+---
+
 ## Local setup
 
 1. **Install dependencies**
@@ -18,11 +30,11 @@ Node.js ice cream parlor API (flavors table on RDS), deployed on EC2 in an Auto 
 2. **Configure environment**
    ```bash
    cp .env.example .env
-   # Edit .env with your DB_HOST, DB_USER, DB_PASSWORD, etc.
+   # Edit .env: DB_HOST, DB_PORT (3306), DB_NAME (icecream), DB_USER (e.g. admin), DB_PASSWORD.
+   # For local MySQL use localhost; for RDS use the terraform output rds_endpoint.
    ```
 
-3. **Database**
-   - Create a MySQL database and run:
+3. **Database** — use **MySQL Workbench** (see “Managing the database with MySQL Workbench” below) or CLI:
    ```bash
    mysql -h $DB_HOST -P $DB_PORT -u $DB_USER -p $DB_NAME < scripts/schema.sql
    mysql -h $DB_HOST -P $DB_PORT -u $DB_USER -p $DB_NAME < scripts/seed.sql
@@ -53,10 +65,30 @@ Node.js ice cream parlor API (flavors table on RDS), deployed on EC2 in an Auto 
 
 3. **Outputs**
    - `alb_url` – app URL (HTTP)
-   - `rds_endpoint` – RDS host for app/scripts
+   - `rds_endpoint` – RDS host for app/scripts and MySQL Workbench
    - `db_name`, `asg_name`
 
-After first apply, create the DB schema on RDS (e.g. connect via bastion or from a machine with access) and run `scripts/schema.sql` and `scripts/seed.sql`.
+### Managing the database with MySQL Workbench
+
+After `terraform apply`, create the schema and seed data on RDS using MySQL Workbench from your machine:
+
+1. **Get connection details** (from Terraform):
+   ```bash
+   cd terraform && terraform output rds_endpoint
+   ```
+   Use the same **username** and **password** you set in `terraform.tfvars` (`db_username`, `db_password`). Database name: `icecream`. Port: `3306`.
+
+2. **In MySQL Workbench:** Add a new MySQL connection:
+   - **Hostname:** the `rds_endpoint` value (e.g. `icecream-db.xxxxx.us-west-2.rds.amazonaws.com`)
+   - **Port:** 3306
+   - **Username:** same as `db_username` in terraform.tfvars (e.g. `admin`)
+   - **Password:** same as `db_password` in terraform.tfvars — store it in the connection or in a vault; do not put it in the repo.
+
+3. **Reaching RDS from your laptop:** RDS is in a **private subnet**, so it is not reachable from the public internet. To use MySQL Workbench locally you need one of:
+   - **SSH tunnel (recommended):** Use an EC2 instance in the same VPC (e.g. one of the ASG instances) as a jump host. In Workbench, set the connection to use SSH with that EC2’s public IP/key, then connect to `rds_endpoint:3306`.
+   - **VPN / bastion:** If your school or AWS setup provides a VPN or bastion that can reach the VPC, connect through that, then use `rds_endpoint` as host in Workbench.
+
+4. **Run the schema and seed:** Once connected, open and run `scripts/schema.sql`, then `scripts/seed.sql` (or use Workbench’s “Run SQL Script” and point at those files).
 
 ## GitHub Actions pipeline
 
@@ -72,7 +104,7 @@ Use one of:
 - **OIDC (recommended):** `AWS_ROLE_ARN`, optional `AWS_REGION`
 - **Access keys:** `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, optional `AWS_REGION`
 
-For deploy: `DB_PASSWORD` (RDS master password used in `terraform apply -var="db_password=..."`).
+For deploy: `DB_PASSWORD` — use the same RDS master password as in `terraform.tfvars` (`db_password`). See “Where to put credentials” above.
 
 ### First-time OIDC
 
