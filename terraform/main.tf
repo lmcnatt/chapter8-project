@@ -12,7 +12,7 @@ terraform {
     bucket         = "icecream-tf-state-lmcnatt"
     key            = "icecream/terraform.tfstate"
     region         = "us-west-2"
-    dynamodb_table = "icecream-tf-locks"
+    use_lockfile   = true
   }
 }
 

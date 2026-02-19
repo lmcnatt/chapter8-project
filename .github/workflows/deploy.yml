@@ -47,6 +47,17 @@ jobs:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: ${{ secrets.AWS_REGION || 'us-west-2' }}
 
+      - name: Ensure Terraform state bucket exists
+        run: |
+          BUCKET="icecream-tf-state-lmcnatt"
+          REGION="${{ secrets.AWS_REGION || 'us-west-2' }}"
+          if ! aws s3api head-bucket --bucket "$BUCKET" 2>/dev/null; then
+            aws s3api create-bucket --bucket "$BUCKET" --region "$REGION" \
+              --create-bucket-configuration LocationConstraint="$REGION"
+            aws s3api put-bucket-versioning --bucket "$BUCKET" \
+              --versioning-configuration Status=Enabled
+          fi
+
       - name: Terraform init
         working-directory: terraform
         run: |
