@@ -63,16 +63,6 @@ jobs:
         run: |
           terraform init -input=false
 
-      - name: Destroy RDS instance (one-time, remove after success)
-        if: vars.RUN_TERRAFORM_APPLY != 'false'
-        working-directory: terraform
-        run: |
-          terraform apply -destroy -target=aws_db_instance.main -input=false -auto-approve \
-            -var="db_password=${{ secrets.DB_PASSWORD }}" \
-            -var="app_repo_url=https://github.com/${{ github.repository }}.git" \
-            -var="app_repo_branch=${{ github.ref_name }}" \
-            -var="allowed_mysql_cidr=${{ vars.ALLOWED_MYSQL_CIDR }}"
-
       - name: Terraform plan
         if: vars.RUN_TERRAFORM_APPLY != 'false'
         working-directory: terraform

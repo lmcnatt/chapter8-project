@@ -2,7 +2,7 @@ const { pool } = require('./connection');
 
 async function listFlavors() {
   const [rows] = await pool.query(
-    'SELECT id, name, description, created_at FROM ice_cream_flavors ORDER BY created_at DESC'
+    'SELECT id, name, description, created_at FROM ice_cream_flavors ORDER BY id ASC'
   );
   return rows;
 }
