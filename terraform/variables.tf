@@ -64,3 +64,22 @@ variable "rds_instance_class" {
   type    = string
   default = "db.t3.micro"
 }
+
+variable "key_name" {
+  description = "EC2 key pair name for SSH (e.g. DevOps); must exist in the region"
+  type        = string
+  default     = "DevOps"
+}
+
+variable "ssh_cidr" {
+  description = "CIDR allowed to SSH to EC2 (e.g. 0.0.0.0/0 or your IP/32)"
+  type        = string
+  default     = "0.0.0.0/0"
+}
+
+# Optional: allow direct MySQL (3306) from this CIDR for local MySQL Workbench. Leave empty to keep RDS private.
+variable "allowed_mysql_cidr" {
+  description = "CIDR allowed to connect to RDS on 3306 (e.g. your IP/32 for Workbench). If set, RDS becomes publicly_accessible."
+  type        = string
+  default     = ""
+}

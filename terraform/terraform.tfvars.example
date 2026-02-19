@@ -20,3 +20,12 @@ asg_desired_capacity = 1
 
 instance_type      = "t3.micro"
 rds_instance_class = "db.t3.micro"
+
+# EC2 key pair for SSH (e.g. for MySQL Workbench tunnel); must exist in AWS in this region
+key_name = "DevOps"
+
+# CIDR allowed to SSH to app instances (0.0.0.0/0 = anyone; use your IP/32 for tighter security)
+ssh_cidr = "0.0.0.0/0"
+
+# Optional: allow direct MySQL from your machine for MySQL Workbench. Set to your IP/32 (e.g. "1.2.3.4/32") or "0.0.0.0/0". Leave empty to keep RDS private (use SSH tunnel instead).
+allowed_mysql_cidr = "0.0.0.0/0"

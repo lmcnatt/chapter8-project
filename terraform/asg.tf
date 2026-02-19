@@ -14,9 +14,13 @@ resource "aws_launch_template" "app" {
   name_prefix   = "${local.name_prefix}-"
   image_id      = data.aws_ami.amazon_linux_2023.id
   instance_type = var.instance_type
+  key_name      = var.key_name
 
-  vpc_security_group_ids = [aws_security_group.ec2.id]
-  user_data              = local.user_data
+  network_interfaces {
+    associate_public_ip_address = true
+    security_groups            = [aws_security_group.ec2.id]
+  }
+  user_data = base64encode(local.user_data)
 
   tag_specifications {
     resource_type = "instance"

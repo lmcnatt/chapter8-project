@@ -27,7 +27,7 @@ resource "aws_security_group" "alb" {
   }
 }
 
-# EC2: allow app port from ALB only
+# EC2: allow app port from ALB; allow SSH for tunnel (e.g. MySQL Workbench)
 resource "aws_security_group" "ec2" {
   name_prefix = "${local.name_prefix}-ec2-"
   description = "EC2 app instances"
@@ -38,6 +38,13 @@ resource "aws_security_group" "ec2" {
     to_port         = 3000
     protocol        = "tcp"
     security_groups = [aws_security_group.alb.id]
+  }
+
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = [var.ssh_cidr]
   }
 
   egress {
@@ -56,7 +63,7 @@ resource "aws_security_group" "ec2" {
   }
 }
 
-# RDS: allow 3306 from EC2 only
+# RDS: allow 3306 from EC2; optionally from allowed_mysql_cidr for local MySQL Workbench
 resource "aws_security_group" "rds" {
   name_prefix = "${local.name_prefix}-rds-"
   description = "RDS MySQL"
@@ -67,6 +74,16 @@ resource "aws_security_group" "rds" {
     to_port         = 3306
     protocol        = "tcp"
     security_groups = [aws_security_group.ec2.id]
+  }
+
+  dynamic "ingress" {
+    for_each = var.allowed_mysql_cidr != "" ? [1] : []
+    content {
+      from_port   = 3306
+      to_port     = 3306
+      protocol    = "tcp"
+      cidr_blocks = [var.allowed_mysql_cidr]
+    }
   }
 
   egress {
