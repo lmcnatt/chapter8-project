@@ -5,6 +5,16 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'Action to perform'
+        required: true
+        default: 'apply'
+        type: choice
+        options:
+          - apply
+          - destroy
 
 env:
   NODE_VERSION: '24'
@@ -12,6 +22,7 @@ env:
 jobs:
   test:
     name: Run tests
+    if: github.event.inputs.action != 'destroy'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -30,7 +41,10 @@ jobs:
   deploy:
     name: Deploy to AWS
     needs: test
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: |
+      github.event.inputs.action != 'destroy' &&
+      github.ref == 'refs/heads/main' &&
+      (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
     permissions:
       id-token: write
@@ -98,3 +112,37 @@ jobs:
       - name: Output ALB URL
         run: |
           cd terraform && terraform output -raw alb_url 2>/dev/null || echo "Run terraform apply locally to get ALB URL"
+
+  destroy:
+    name: Destroy all AWS resources
+    if: github.event.inputs.action == 'destroy'
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ secrets.AWS_REGION || 'us-west-2' }}
+
+      - name: Terraform init
+        working-directory: terraform
+        run: |
+          terraform init -input=false
+
+      - name: Terraform destroy
+        working-directory: terraform
+        run: |
+          terraform destroy -input=false -auto-approve \
+            -var="db_password=${{ secrets.DB_PASSWORD }}" \
+            -var="app_repo_url=https://github.com/${{ github.repository }}.git" \
+            -var="app_repo_branch=${{ github.ref_name }}" \
+            -var="app_version=${{ github.sha }}" \
+            -var="allowed_mysql_cidr=${{ vars.ALLOWED_MYSQL_CIDR }}"
