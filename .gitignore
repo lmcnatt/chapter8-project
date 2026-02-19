@@ -12,3 +12,6 @@ terraform/*.tfstate.*
 # IDE / editor
 .cursor/
 .vscode/
+
+# AWS credentials
+.aws/
