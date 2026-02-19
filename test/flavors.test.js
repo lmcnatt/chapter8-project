@@ -77,7 +77,9 @@ describe('GET /health', () => {
 
 describe('GET /flavors', () => {
   it('returns a list of flavors', async () => {
-    const res = await request('/flavors');
+    const res = await request('/flavors', {
+      headers: { 'Accept': 'application/json' },
+    });
     assert.equal(res.statusCode, 200);
     assert.ok(Array.isArray(res.body));
     assert.equal(res.body.length, 2);

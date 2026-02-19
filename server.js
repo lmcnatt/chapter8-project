@@ -25,6 +25,11 @@ app.get('/health', async (req, res) => {
 app.get('/flavors', async (req, res) => {
   try {
     const flavors = await listFlavors();
+
+    if (req.accepts('html', 'json') === 'json') {
+      return res.json(flavors);
+    }
+
     const flavorCards = flavors.map(f => `
       <div class="card">
         <h2>${escapeHtml(f.name)}</h2>
