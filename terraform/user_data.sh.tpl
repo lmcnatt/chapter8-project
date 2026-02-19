@@ -1,6 +1,8 @@
 #!/bin/bash
 set -e
 
+# Deploy version: ${app_version}
+
 # Install Node.js 24 and git (Amazon Linux 2023)
 curl -fsSL https://rpm.nodesource.com/setup_24.x | bash -
 dnf install -y nodejs git

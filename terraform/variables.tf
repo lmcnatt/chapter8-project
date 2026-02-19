@@ -40,6 +40,12 @@ variable "app_repo_branch" {
   default     = "main"
 }
 
+variable "app_version" {
+  description = "App version / commit SHA — forces a new launch template version on each deploy"
+  type        = string
+  default     = "latest"
+}
+
 variable "asg_min_size" {
   type    = number
   default = 1

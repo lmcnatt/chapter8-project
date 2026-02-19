@@ -1,12 +1,13 @@
 locals {
   user_data = var.app_repo_url != "" ? templatefile("${path.module}/user_data.sh.tpl", {
-    app_repo_url   = var.app_repo_url
+    app_repo_url    = var.app_repo_url
     app_repo_branch = var.app_repo_branch
-    db_host        = aws_db_instance.main.address
-    db_port        = "3306"
-    db_name        = var.db_name
-    db_user        = var.db_username
-    db_password    = var.db_password
+    app_version     = var.app_version
+    db_host         = aws_db_instance.main.address
+    db_port         = "3306"
+    db_name         = var.db_name
+    db_user         = var.db_username
+    db_password     = var.db_password
   }) : "#!/bin/bash\n# No app_repo_url set; configure and deploy app manually.\nexit 0"
 }
 

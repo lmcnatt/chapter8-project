@@ -71,6 +71,7 @@ jobs:
             -var="db_password=${{ secrets.DB_PASSWORD }}" \
             -var="app_repo_url=https://github.com/${{ github.repository }}.git" \
             -var="app_repo_branch=${{ github.ref_name }}" \
+            -var="app_version=${{ github.sha }}" \
             -var="allowed_mysql_cidr=${{ vars.ALLOWED_MYSQL_CIDR }}" \
             -out=tfplan
         continue-on-error: true
@@ -83,6 +84,7 @@ jobs:
             -var="db_password=${{ secrets.DB_PASSWORD }}" \
             -var="app_repo_url=https://github.com/${{ github.repository }}.git" \
             -var="app_repo_branch=${{ github.ref_name }}" \
+            -var="app_version=${{ github.sha }}" \
             -var="allowed_mysql_cidr=${{ vars.ALLOWED_MYSQL_CIDR }}"
         continue-on-error: true
 
