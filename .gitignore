@@ -3,6 +3,12 @@ node_modules/
 *.log
 .DS_Store
 
+# Terraform (do not commit state; may contain secrets)
+terraform/*.tfstate
+terraform/*.tfstate.*
+.terraform/
+*.tfplan
+
 # IDE / editor
 .cursor/
 .vscode/

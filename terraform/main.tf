@@ -8,13 +8,12 @@ terraform {
     }
   }
 
-  # Optional: uncomment and set for remote state
-  # backend "s3" {
-  #   bucket         = "your-terraform-state-bucket"
-  #   key            = "icecream/terraform.tfstate"
-  #   region         = "us-west-2"
-  #   dynamodb_table = "terraform-locks"
-  # }
+  backend "s3" {
+    bucket         = "icecream-tf-state-lmcnatt"
+    key            = "icecream/terraform.tfstate"
+    region         = "us-west-2"
+    dynamodb_table = "icecream-tf-locks"
+  }
 }
 
 provider "aws" {

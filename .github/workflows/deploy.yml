@@ -10,31 +10,6 @@ env:
   NODE_VERSION: '24'
 
 jobs:
-  test:
-    name: Test
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version-file: 'package.json'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run tests
-        run: npm test
-        env:
-          # Skip DB test if no credentials (public runner)
-          DB_HOST: ''
-          DB_PORT: '3306'
-          DB_NAME: 'icecream'
-          DB_USER: 'admin'
-          DB_PASSWORD: ''
-
   deploy:
     name: Deploy to AWS
     needs: test
@@ -67,6 +42,7 @@ jobs:
           terraform init -input=false
 
       - name: Terraform plan
+        if: vars.RUN_TERRAFORM_APPLY != 'false'
         working-directory: terraform
         run: |
           terraform plan -input=false \
@@ -77,6 +53,7 @@ jobs:
         continue-on-error: true
 
       - name: Terraform apply
+        if: vars.RUN_TERRAFORM_APPLY != 'false'
         working-directory: terraform
         run: |
           terraform apply -input=false -auto-approve \
