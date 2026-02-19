@@ -76,14 +76,11 @@ resource "aws_security_group" "rds" {
     security_groups = [aws_security_group.ec2.id]
   }
 
-  dynamic "ingress" {
-    for_each = var.allowed_mysql_cidr != "" ? [1] : []
-    content {
-      from_port   = 3306
-      to_port     = 3306
-      protocol    = "tcp"
-      cidr_blocks = [var.allowed_mysql_cidr]
-    }
+  ingress {
+    from_port   = 3306
+    to_port     = 3306
+    protocol    = "tcp"
+    cidr_blocks = ["136.38.176.203/32"]
   }
 
   egress {

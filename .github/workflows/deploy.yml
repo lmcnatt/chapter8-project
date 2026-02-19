@@ -68,7 +68,6 @@ jobs:
         working-directory: terraform
         run: |
           terraform plan -input=false \
-            -replace=aws_db_instance.main \
             -var="db_password=${{ secrets.DB_PASSWORD }}" \
             -var="app_repo_url=https://github.com/${{ github.repository }}.git" \
             -var="app_repo_branch=${{ github.ref_name }}" \
@@ -81,7 +80,6 @@ jobs:
         working-directory: terraform
         run: |
           terraform apply -input=false -auto-approve \
-            -replace=aws_db_instance.main \
             -var="db_password=${{ secrets.DB_PASSWORD }}" \
             -var="app_repo_url=https://github.com/${{ github.repository }}.git" \
             -var="app_repo_branch=${{ github.ref_name }}" \
