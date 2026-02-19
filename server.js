@@ -138,20 +138,158 @@ app.get('/ping', async (req, res) => {
 app.get('/', (req, res) => {
   res.send(`
 <!DOCTYPE html>
-<html>
-<head><title>Ice Cream Parlor</title></head>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ice Cream Parlor</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: linear-gradient(135deg, #fdf2f8 0%, #ede9fe 50%, #dbeafe 100%);
+      min-height: 100vh;
+      color: #1e293b;
+    }
+    nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 1.25rem 1.5rem;
+    }
+    nav .logo {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: #7c3aed;
+      text-decoration: none;
+    }
+    nav a.nav-link {
+      color: #6d28d9;
+      text-decoration: none;
+      font-weight: 600;
+      padding: .5rem 1.25rem;
+      border-radius: .5rem;
+      transition: background .15s ease;
+    }
+    nav a.nav-link:hover { background: rgba(124,58,237,.08); }
+    .hero {
+      text-align: center;
+      padding: 4rem 1.5rem 2.5rem;
+      max-width: 700px;
+      margin: 0 auto;
+    }
+    .hero h1 {
+      font-size: 3rem;
+      font-weight: 800;
+      line-height: 1.15;
+      background: linear-gradient(90deg, #ec4899, #8b5cf6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .hero p {
+      margin-top: 1rem;
+      font-size: 1.2rem;
+      color: #64748b;
+      line-height: 1.6;
+    }
+    .hero .cta {
+      display: inline-block;
+      margin-top: 2rem;
+      padding: .85rem 2rem;
+      background: linear-gradient(135deg, #8b5cf6, #ec4899);
+      color: #fff;
+      font-size: 1.05rem;
+      font-weight: 700;
+      border-radius: .75rem;
+      text-decoration: none;
+      transition: transform .15s ease, box-shadow .15s ease;
+    }
+    .hero .cta:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(139,92,246,.35);
+    }
+    .form-section {
+      max-width: 520px;
+      margin: 2rem auto 4rem;
+      background: #fff;
+      border-radius: 1rem;
+      padding: 2.5rem;
+      box-shadow: 0 4px 24px rgba(0,0,0,.06);
+    }
+    .form-section h2 {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: #7c3aed;
+      margin-bottom: 1.5rem;
+      text-align: center;
+    }
+    .form-section label {
+      display: block;
+      font-weight: 600;
+      font-size: .9rem;
+      color: #475569;
+      margin-bottom: .35rem;
+    }
+    .form-section input {
+      width: 100%;
+      padding: .7rem .9rem;
+      border: 1.5px solid #e2e8f0;
+      border-radius: .5rem;
+      font-size: 1rem;
+      margin-bottom: 1.25rem;
+      transition: border-color .15s ease;
+      outline: none;
+    }
+    .form-section input:focus { border-color: #8b5cf6; }
+    .form-section button {
+      width: 100%;
+      padding: .8rem;
+      border: none;
+      border-radius: .5rem;
+      background: linear-gradient(135deg, #8b5cf6, #ec4899);
+      color: #fff;
+      font-size: 1.05rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform .15s ease, box-shadow .15s ease;
+    }
+    .form-section button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(139,92,246,.35);
+    }
+    footer {
+      text-align: center;
+      padding: 2rem 1rem;
+      color: #94a3b8;
+      font-size: .85rem;
+    }
+  </style>
+</head>
 <body>
-  <h1>Ice Cream Parlor</h1>
-  <p>API: <a href="/flavors">GET /flavors</a> | <a href="/health">GET /health</a> | <a href="/ping">GET /ping</a> (axios)</p>
-  <form action="/flavors" method="post">
-    <label>Name: <input name="name" required /></label>
-    <label>Description: <input name="description" /></label>
-    <button type="submit">Add flavor</button>
-  </form>
-  <p>(Submit form as POST to /flavors; use Accept: application/json for JSON.)</p>
+  <nav>
+    <a class="logo" href="/">Ice Cream Parlor</a>
+    <a class="nav-link" href="/flavors">View Flavors</a>
+  </nav>
+  <div class="hero">
+    <h1>Welcome to the Ice Cream Parlor</h1>
+    <p>Discover our hand-crafted flavors, made fresh with the finest ingredients. From timeless classics to bold new creations — there's a scoop for everyone.</p>
+    <a class="cta" href="/flavors">Browse All Flavors</a>
+  </div>
+  <div class="form-section">
+    <h2>Suggest a New Flavor</h2>
+    <form action="/flavors" method="post">
+      <label for="name">Flavor Name</label>
+      <input id="name" name="name" placeholder="e.g. Mango Sorbet" required />
+      <label for="description">Description</label>
+      <input id="description" name="description" placeholder="e.g. Tropical mango with a hint of lime" />
+      <button type="submit">Add Flavor</button>
+    </form>
+  </div>
+  <footer>&copy; 2026 Ice Cream Parlor</footer>
 </body>
-</html>
-  `);
+</html>`);
 });
 
 if (require.main === module) {
